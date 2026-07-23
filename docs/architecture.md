@@ -54,8 +54,11 @@ drawing_inspector/          # 当前阶段的全部工作范围
 │   ├── excel_report.py     # Excel检查基准书生成
 │   └── bubble_diagram.py   # 气泡图PDF渲染
 ├── models.py               # 数据模型（dataclass）
-└── constants.py            # 公差表常量、螺纹标准
+├── constants.py            # 公差表常量、螺纹标准
+└── pipeline.py             # 整合入口：assemble_drawing_data(pdf_path) -> DrawingData
 ```
+
+`pipeline.py`不在最初的模块划分里，是Sprint 4实施中新增的整合点：串联检测→提取→重组→区域分类→各parser→GB/T1804查表补全，供后续Excel/气泡图导出、以及未来Web UI后端复用。
 
 **目标形态（暂不实施）**：解析引擎完成后，会新增`backend/`（FastAPI，暴露`POST /inspect`等接口，供Electron子进程启动）、`frontend/`（Electron渲染进程页面，上传/预览/导出交互）、`electron/`（主进程，管理FastAPI子进程生命周期）。技术选型待Web UI阶段启动时再定（见`tech_stack.md`）。
 
@@ -136,6 +139,8 @@ class DrawingData:
     hole_features: list[HoleFeature]
     tolerance_standard: str         # "GB-1804-M" 等
 ```
+
+**已实现（Sprint 4b）**：`pipeline.assemble_drawing_data(pdf_path)`产出`DrawingData`。对没有显式公差的`Dimension`，用`tolerance_standard`解析出的等级（如"GB-1804-M"→等级"m"）查`tolerance/gb1804.py`补全`upper_deviation`/`lower_deviation`，并把该`Dimension.tolerance_grade`设为解析出的标准字符串（如"GB-1804-M"），作为"公差来源"标记——`tolerance_grade`非空且有偏差值 = GB1804查表补全（**当前多数格未经核实，见Step 4.1风险**），`tolerance_grade`为空但有偏差值 = 图纸原始标注。非矢量PDF输入会抛出`NotVectorPDFError`。
 
 ## ADR
 

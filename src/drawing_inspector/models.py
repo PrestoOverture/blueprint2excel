@@ -64,3 +64,16 @@ class HoleFeature:
     pilot_hole: float | None
     quantity: int
     back_side: bool
+
+
+@dataclass
+class DrawingData:
+    drawing_number: str
+    part_name: str
+    material: str
+    scale: str
+    date: str
+    tech_requirements: list[str]
+    dimensions: list[Dimension]
+    hole_features: list[HoleFeature]
+    tolerance_standard: str
