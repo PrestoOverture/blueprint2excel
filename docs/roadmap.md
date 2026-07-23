@@ -2,7 +2,7 @@
 
 ## 范围说明
 
-当前阶段的全部工作是Sprint 1-4：矢量PDF解析引擎（`drawing_inspector`库）。**没有CLI，没有Web UI**。Web UI + Electron是既定的最终交付形态（见`architecture.md` ADR-005），但在解析引擎于`blueprints/`下全部测试图纸上验证准确之前不启动，避免在核心逻辑没做扎实前铺开范围。
+Sprint 1-4（矢量PDF解析引擎，`drawing_inspector`库）已完成，经过深度人工验证（含泛化性测试，发现并修复了1个真实bug）。**Sprint 5（Web UI）已于2026-07-23启动**，用户明确批准。仍然没有独立CLI（见`architecture.md` ADR-005）。Sprint 5内部也要按Step 5.1→5.2→5.3顺序来，每层独立验证完再加下一层，不要一次性把后端+前端+Electron都搭起来再测试。
 
 ## 实施顺序（TDD，每步红→绿→重构）
 
@@ -99,9 +99,27 @@
 
 **Real Test**: 对板面图跑全流程生成Excel+气泡图PDF，人工打开两个文件，核对气泡编号位置与原图标注偏差<2mm（按比例尺换算），Excel字段无缺失。
 
-### Sprint 5+: Web UI（Electron壳 + FastAPI后端）—— 未启动
+### Sprint 5: Web UI（Electron壳 + FastAPI后端）—— 已启动（2026-07-23，用户批准）
 
-不在当前范围内。启动条件：解析引擎在`blueprints/`全部8张图纸上跑通并通过人工核对。启动时再补充具体Step拆分和技术选型（见`tech_stack.md`、`architecture.md` ADR-005）。
+启动条件已满足：解析引擎在`blueprints/`全部8张图纸上跑通，做过深度人工核对（不只是冒烟测试），发现并修复了一个真实的公差堆叠误判bug（见`progress.md`）。技术选型见`tech_stack.md`：FastAPI+uvicorn后端、React+TypeScript+Vite前端、Electron桌面壳。
+
+**Step 5.1** — FastAPI后端 (`backend/main.py`, `backend/routes/inspect.py`)
+- `POST /inspect`：接收PDF上传，调用`pipeline.assemble_drawing_data()`，同时生成Excel和气泡图PDF到临时目录，返回结构化JSON（DrawingData的字段）+ 两个文件的下载token/链接
+- 非矢量PDF输入：返回明确的错误响应（对应`NotVectorPDFError`），不是500
+- 测试：用httpx/curl直接测试API，不需要前端
+- **先只做这一步**，不做前端，不做Electron
+
+**Step 5.2** — React前端骨架 (`frontend/`)
+- 拖拽/选择PDF上传区、调用Step 5.1的API、结果预览（标题栏信息、尺寸列表、孔位表、技术要求）、下载按钮（Excel/气泡图PDF）、错误提示（非矢量PDF）
+- 用`npm run dev`本地跑，浏览器里手动测试，后端用`uvicorn`本地跑，先不套Electron壳
+- 测试：至少手动走一遍完整流程（上传板面图→看到解析结果→下载Excel和气泡图PDF能打开且内容对）
+
+**Step 5.3** — Electron桌面壳 (`electron/`)
+- 主进程启动/管理FastAPI子进程（随机端口、生命周期跟主进程绑定，主进程退出时子进程也退出）
+- 渲染进程加载Step 5.2的前端（开发模式指向Vite dev server，生产模式待打包分发阶段再定）
+- 测试：双击/命令行启动Electron应用，走一遍完整流程
+
+**Real Test（Sprint 5）**：在Electron应用里，对板面图跑一遍完整流程——上传→预览结果→下载Excel和气泡图PDF，人工确认整个体验顺畅、没有明显bug。这是主观判断，需要用户亲自试用确认。
 
 ## 测试数据
 

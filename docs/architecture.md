@@ -186,4 +186,4 @@ class DrawingData:
 
 **代价**: 打包体积和分发链路比纯CLI复杂（需要打包Python运行时或用PyInstaller），且需要多维护一套前端代码。
 
-**状态**: 未启动。当前阶段的全部工作是`drawing_inspector`解析引擎（对应`roadmap.md` Sprint 1-4），Web UI相关的具体技术选型、目录结构和实现在解析引擎验证通过`blueprints/`下全部测试图纸之前不展开。
+**状态**: 已启动（2026-07-23，用户批准）。技术选型已定（见`tech_stack.md`）：FastAPI+uvicorn、React+TypeScript+Vite、Electron。实施顺序见`roadmap.md` Sprint 5 Step 5.1-5.3。
