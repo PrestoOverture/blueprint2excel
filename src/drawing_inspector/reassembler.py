@@ -41,7 +41,7 @@ def reassemble_dimensions(objects: list[TextObject]) -> list[Dimension]:
     dimensions: list[Dimension] = []
     consumed: set[int] = set()
     for index, item in enumerate(objects):
-        if not _is_unrotated(item):
+        if not _is_dimension_rotation(item):
             continue
         symmetric = _SYMMETRIC_PATTERN.fullmatch(item.text)
         if symmetric is None:
@@ -58,7 +58,7 @@ def reassemble_dimensions(objects: list[TextObject]) -> list[Dimension]:
         index
         for index, item in enumerate(objects)
         if index not in consumed
-        and _is_unrotated(item)
+        and _is_dimension_rotation(item)
         and _NOMINAL_PATTERN.fullmatch(item.text) is not None
     ]
     for index in nominal_indexes:
@@ -108,9 +108,24 @@ def _make_dimension(
     )
 
 
-def _is_unrotated(item: TextObject) -> bool:
+def _is_dimension_rotation(item: TextObject) -> bool:
     normalized = item.rotation % 360
-    return min(normalized, 360 - normalized) <= ROTATION_TOLERANCE_DEGREES
+    return any(
+        _rotation_distance(normalized, allowed) <= ROTATION_TOLERANCE_DEGREES
+        for allowed in (0.0, 90.0, 270.0)
+    )
+
+
+def _rotations_match(first: TextObject, second: TextObject) -> bool:
+    return (
+        _rotation_distance(first.rotation % 360, second.rotation % 360)
+        <= ROTATION_TOLERANCE_DEGREES
+    )
+
+
+def _rotation_distance(first: float, second: float) -> float:
+    difference = abs(first - second)
+    return min(difference, 360 - difference)
 
 
 def _find_inline_tolerance(
@@ -121,7 +136,11 @@ def _find_inline_tolerance(
 ) -> tuple[int, float] | None:
     nominal_center_y = nominal.y + nominal.height / 2
     for index, item in enumerate(objects):
-        if index == nominal_index or index in consumed or not _is_unrotated(item):
+        if (
+            index == nominal_index
+            or index in consumed
+            or not _rotations_match(nominal, item)
+        ):
             continue
         match = _SYMMETRIC_FRAGMENT_PATTERN.fullmatch(item.text)
         if match is None:
@@ -152,7 +171,7 @@ def _find_stacked_tolerance(
         if (
             index == nominal_index
             or index in consumed
-            or not _is_unrotated(item)
+            or not _rotations_match(nominal, item)
             or abs(item.y - nominal.y)
             >= TOLERANCE_VERTICAL_FONT_FACTOR * font_size
         ):

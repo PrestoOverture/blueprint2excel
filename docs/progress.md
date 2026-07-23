@@ -15,10 +15,12 @@
 - [x] Sprint 1: 骨架 + 检测 + 基础提取 —— Codex实现，Claude review通过（2026-07-23）：`uv sync`/`pytest`/`mypy --strict`/`ruff`全绿；Real Test通过（`blueprints/`全部8张图纸`is_vector_pdf`均返回True，均为SolidWorks导出）；旋转文字提取验证正确（如"448"的90°旋转片段被正确标记，重组留给Sprint 2）
 - [x] Sprint 2: 重组层 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。旋转文字还原规则（升序y拼接后整体反转字符串）用真实图纸7个案例验证；⌀/Φ/Ø均未在真实PDF中以文字形式出现（图形绘制），Sprint 3孔位表/尺寸解析需注意；对角旋转标注（50.7°/60°/315°/320.2°，共46个碎片）明确排除在外，留待后续
   - **发现的风险（需在Sprint 3处理）**：`reassemble_dimensions`未做区域过滤时，会把孔位表内不相关的相邻单元格误聚类成虚假公差标注——实测复现：表格区"12"(B行沉孔深度)+"9"(A行数量，上方)+"0"(B行螺纹深度，下方)被误组装成`Dimension(nominal=12, upper=9, lower=0)`。这正是`architecture.md` ADR-003预判的失效模式，Sprint 3 Step 3.1区域分类必须先于Step 3.5尺寸提取执行，且孔位表区域要从尺寸提取的输入中排除
-- [~] Sprint 3: 结构化解析 —— 进行中
-  - [x] Step 3.1/3.3/3.4（区域分类+标题栏+技术要求）—— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿，标题栏/技术要求提取值与真实图纸逐字匹配。采用锚点文本定位（非固定比例、非`find_tables()` bbox，后者在此图纸上不可用，详见`architecture.md` ADR-003更新）。已知限制：`drawing_bbox`是矩形会与`table_bbox`几何重叠，Step 3.5尺寸提取必须显式排除`table_bbox`内文字
-  - [x] Step 3.2 孔位表解析 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿，11行A-L（跳过I）与真实图纸逐字段核对全部匹配。已知信息丢失：B行螺纹线自身的深度"0"因`HoleFeature`无对应字段被丢弃，接受此限制不新增字段。`HoleFeature` dataclass已从`architecture.md`落地到`models.py`
-  - [ ] Step 3.5 图面尺寸提取
+- [x] Sprint 3: 结构化解析 —— 全部完成（2026-07-23）
+  - [x] Step 3.1/3.3/3.4（区域分类+标题栏+技术要求）—— Codex实现，Claude review通过：`pytest`/`mypy --strict`/`ruff`全绿，标题栏/技术要求提取值与真实图纸逐字匹配。采用锚点文本定位（非固定比例、非`find_tables()` bbox，后者在此图纸上不可用，详见`architecture.md` ADR-003更新）。已知限制：`drawing_bbox`是矩形会与`table_bbox`几何重叠，Step 3.5尺寸提取必须显式排除`table_bbox`内文字
+  - [x] Step 3.2 孔位表解析 —— Codex实现，Claude review通过：`pytest`/`mypy --strict`/`ruff`全绿，11行A-L（跳过I）与真实图纸逐字段核对全部匹配。已知信息丢失：B行螺纹线自身的深度"0"因`HoleFeature`无对应字段被丢弃，接受此限制不新增字段。`HoleFeature` dataclass已从`architecture.md`落地到`models.py`
+  - [x] Step 3.5 图面尺寸提取 —— Codex实现，Claude review通过：`pytest`/`mypy --strict`/`ruff`全绿。真实图纸提取出18个Dimension：9个未旋转（含2组60±0.05）+ 9个旋转90°（448×2/410/205/20/190×2/160×2）。对角旋转标注（对角2X⌀15+0.018/0）正确排除，未泄漏为虚假标注。表格区域回归测试通过——不再产生虚假的`Dimension(12,+9,0)`
+    - **已知限制（后续可补）**：旋转90°的公差叠加尚未打通——两个"160"实例都没能匹配上各自的"±0.05"搭档（附近的合并簇几何范围超出了现有的水平/垂直阈值，这些阈值是为单行未旋转文字设计的），目前落地为无公差的裸标注`Dimension(nominal=160, upper=None, lower=None)`。修复需要专门针对"合并后的旋转簇"重新设计间距阈值，不在当前范围内，留作后续小任务
+    - `reassemble_dimensions`已扩展支持0°/90°/270°三种旋转角度的标称值识别（此前只接受0°），旋转匹配要求公差碎片与标称值同角度，不允许跨角度匹配
 - [ ] Sprint 4: 公差计算 + 输出
 - [ ] Sprint 5+: Web UI（Electron壳 + FastAPI后端）—— 未启动，见`roadmap.md`
 
