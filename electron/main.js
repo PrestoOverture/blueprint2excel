@@ -1,5 +1,5 @@
 const { app, BrowserWindow, dialog } = require('electron')
-const { spawn } = require('node:child_process')
+const { exec, spawn } = require('node:child_process')
 const http = require('node:http')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
@@ -22,6 +22,8 @@ function startBackend() {
     {
       cwd: repositoryRoot,
       stdio: 'inherit',
+      // Improve PATH and executable-extension resolution for uv on Windows.
+      shell: process.platform === 'win32',
     },
   )
 
@@ -69,18 +71,30 @@ async function stopBackend() {
   if (!backendProcess || backendStopped) return
 
   const processToStop = backendProcess
-  processToStop.kill('SIGTERM')
-
-  const exitedGracefully = await Promise.race([
-    backendExitPromise.then(() => true),
-    new Promise((resolve) =>
-      setTimeout(() => resolve(false), shutdownTimeoutMs),
-    ),
-  ])
-
-  if (!exitedGracefully && processToStop.exitCode === null) {
-    processToStop.kill('SIGKILL')
+  if (process.platform === 'win32') {
+    await new Promise((resolve) => {
+      exec(`taskkill /PID ${processToStop.pid} /T /F`, (error) => {
+        if (error) {
+          console.error('Failed to stop backend process tree:', error)
+        }
+        resolve()
+      })
+    })
     await backendExitPromise
+  } else {
+    processToStop.kill('SIGTERM')
+
+    const exitedGracefully = await Promise.race([
+      backendExitPromise.then(() => true),
+      new Promise((resolve) =>
+        setTimeout(() => resolve(false), shutdownTimeoutMs),
+      ),
+    ])
+
+    if (!exitedGracefully && processToStop.exitCode === null) {
+      processToStop.kill('SIGKILL')
+      await backendExitPromise
+    }
   }
 }
 
