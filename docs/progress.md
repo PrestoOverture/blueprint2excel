@@ -24,7 +24,7 @@
 - [~] Sprint 4: 公差计算 + 输出 —— 进行中
   - [x] Step 4.1 GB/T1804公差查表 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。**重要风险，非小事**：整张公差表（8个尺寸区间×4个等级=32格）里只有roadmap.md给出的2个值经过确认（6-30mm/m级=0.1，400-1000mm/m级=0.4）——这两个值本身还和我记忆中的ISO2768-1标准对不上（我记得的是0.2和0.8），已问过用户，用户决定先按roadmap.md的值实现并标记待核实。其余30格全部是未经核实的占位数值，`constants.py`和`gb1804.py`里都有醒目警告。**在这个查表结果被用于任何真实检验决策之前，必须找到GB/T 1804官方标准文本逐格核对**
   - [x] Step 4.1b pipeline.py整合（新增，不在原模块划分里）—— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。`assemble_drawing_data()`串联全部已实现模块产出`DrawingData`；真实图纸装配出18个尺寸+11个孔位，GB1804补全逻辑正确（60±0.05等2个显式公差保持`tolerance_grade=None`不被覆盖，16个裸尺寸如920被填入`tolerance_grade="GB-1804-M"`）；`NotVectorPDFError`正确抛出。已记录进`architecture.md`
-  - [ ] Step 4.2 Excel检查基准书导出
+  - [x] Step 4.2 Excel检查基准书导出 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。4个sheet核对：图纸基本信息、检查基准书（18行，气泡号1-18无重复）、孔位汇总（11行）、公差明细（18行）。"公差来源"列正确区分"图纸标注"vs"GB-1804-M查表（未核实）"，把Step4.1的公差表风险直接暴露在交付物里而非掩盖。`bubble_id`原地写入`Dimension`对象，供Step 4.3气泡图复用同一编号
   - [ ] Step 4.3 气泡图PDF
 - [ ] Sprint 5+: Web UI（Electron壳 + FastAPI后端）—— 未启动，见`roadmap.md`
 
