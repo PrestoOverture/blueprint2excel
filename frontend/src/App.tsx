@@ -1,4 +1,5 @@
 import { type ChangeEvent, type DragEvent, useMemo, useState } from 'react'
+import { API_BASE } from './api'
 import type { ApiError, Dimension, InspectionResult } from './types'
 
 const titleFields: Array<[keyof InspectionResult, string]> = [
@@ -54,7 +55,7 @@ function App() {
     formData.append('file', file)
 
     try {
-      const response = await fetch('/inspect', {
+      const response = await fetch(`${API_BASE}/inspect`, {
         method: 'POST',
         body: formData,
       })
@@ -205,8 +206,8 @@ function App() {
           )}
 
           <div className="downloads">
-            <a href={result.excel_download_url}>下载检查基准书(Excel)</a>
-            <a href={result.bubble_diagram_download_url}>下载气泡图(PDF)</a>
+            <a href={`${API_BASE}${result.excel_download_url}`}>下载检查基准书(Excel)</a>
+            <a href={`${API_BASE}${result.bubble_diagram_download_url}`}>下载气泡图(PDF)</a>
           </div>
         </div>
       )}

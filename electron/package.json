@@ -1,0 +1,13 @@
+{
+  "name": "blueprint-electron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "build:frontend": "npm run build --prefix ../frontend",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^43.2.0"
+  }
+}

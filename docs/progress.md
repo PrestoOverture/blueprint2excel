@@ -29,7 +29,11 @@
 - [ ] Sprint 5: Web UI —— 已启动（2026-07-23，用户批准）
   - [x] Step 5.1 FastAPI后端 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy backend --strict`/`mypy src --strict`/`ruff`全绿。**独立验证（真实起了uvicorn进程，用curl逐个端点核对，不只是信测试套件）**：`/health`正常；`POST /inspect`上传板面图返回200，`drawing_number`/18个尺寸/11个孔位全部正确；Excel和气泡图PDF下载端点都能拿到有效文件（PK/%PDF开头字节核对过）；非矢量PDF正确返回422（不是500）且错误信息清晰；未知job_id正确返回404。启动命令：`uv run uvicorn backend.main:app`
   - [x] Step 5.2 React前端骨架 —— Codex实现，Claude review通过（2026-07-23）：`npm install`/`npm run build`/`npx tsc --noEmit`全绿。**真实浏览器验证**：Chrome插件当时不可用，改用Playwright（临时装在scratchpad里，不污染项目依赖）headless驱动真实Chromium——起`uv run uvicorn backend.main:app`+`npm run dev`两个进程，打开页面上传板面图，截图确认：标题栏信息/技术要求5条/尺寸列表18行（气泡号1-18，公差来源列正确区分"图纸标注"vs"GB-1804-M"）/孔位汇总11行，全部与真实数据吻合；下载链接通过Vite代理拿到有效Excel(PK)和PDF(%PDF)；无console报错；非矢量PDF场景截图确认红色错误提示正确显示。`node_modules`/`dist`已加入`.gitignore`
-  - [ ] Step 5.3 Electron桌面壳
+  - [x] Step 5.3 Electron桌面壳 —— Codex实现，Claude review通过（2026-07-23）：`npm install`/frontend的`npm run build`+`tsc --noEmit`全绿。**真实桌面应用验证（不是浏览器，是真正的Electron.app原生窗口）**：`npm start`启动后用`--remote-debugging-port`连CDP（因为macOS截屏权限在这个环境里不可用，改走CDP这条路径，效果等价——能拿到真实渲染内容和截图），确认标题栏/技术要求/尺寸列表18行/孔位表11行全部正确显示，浏览器console无报错。**子进程清理验证（重点）**：只给Electron主进程精确发单个SIGTERM（不是笼统pkill，避免误伤造成假阳性），uvicorn日志显示完整优雅关闭序列（"Shutting down"→"Application shutdown complete"），退出后`ps aux`确认没有残留的uvicorn或Electron进程。启动命令：`npm run build --prefix frontend && npm start --prefix electron`（或分两步：先build frontend，再进electron目录`npm start`）。前端为了支持Electron的`file://`加载新增了`frontend/src/api.ts`的`API_BASE`常量（dev模式走Vite代理用相对路径，生产构建打包进Electron后用绝对路径`http://127.0.0.1:8000`），只改了这一处，其余UI逻辑不变
+
+## Sprint 5（Web UI第一版）全部完成 —— 2026-07-23
+
+FastAPI后端 + React前端 + Electron桌面壳三层都已实现并独立验证（不只是信任Codex的报告，每一层我都自己起了真实进程、发了真实请求/截了真实图核对）。目前是"从源码运行"的可用版本，**还没做打包分发（electron-builder等），这是P2范畴**（见`prd.md`），也就是说现在能给开发者跑，还不能直接发给最终用户双击安装。
 
 ## Sprint 1-4（roadmap.md当前全部范围）已完成 —— 2026-07-23
 
