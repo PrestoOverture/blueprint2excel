@@ -155,6 +155,25 @@ def test_reassembles_stacked_tolerance_fragments() -> None:
     ]
 
 
+def test_keeps_nearby_large_values_as_independent_dimensions() -> None:
+    fragments = [
+        _text("50", 10.0, 20.0, 5.0, rotation=0),
+        _text("24", 10.0, 12.0, 5.0, rotation=0),
+        _text("68", 10.0, 28.0, 5.0, rotation=0),
+    ]
+
+    dimensions = reassemble_dimensions(fragments)
+
+    assert {
+        (dimension.nominal, dimension.upper_deviation, dimension.lower_deviation)
+        for dimension in dimensions
+    } == {
+        (24.0, None, None),
+        (50.0, None, None),
+        (68.0, None, None),
+    }
+
+
 def test_reassembles_single_text_symmetric_tolerance() -> None:
     annotation = _text("60 ±0.05", 10.0, 20.0, 5.0, rotation=0)
 

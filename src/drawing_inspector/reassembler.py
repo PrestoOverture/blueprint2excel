@@ -20,6 +20,8 @@ _SYMMETRIC_FRAGMENT_PATTERN = re.compile(r"^\s*±\s*(\d+(?:\.\d+)?)\s*$")
 _DEVIATION_PATTERN = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
 TOLERANCE_VERTICAL_FONT_FACTOR = 2.0
 TOLERANCE_HORIZONTAL_FONT_FACTOR = 1.0
+MAX_DEVIATION_ABSOLUTE_FLOOR = 2.0
+MAX_DEVIATION_NOMINAL_FACTOR = 0.1
 
 
 def classify_dimension_type(text: str) -> str:
@@ -195,9 +197,20 @@ def _find_stacked_tolerance(
         or _DEVIATION_PATTERN.fullmatch(lower_text) is None
     ):
         return None
+    nominal_match = _NOMINAL_PATTERN.fullmatch(nominal.text)
+    if nominal_match is None:
+        return None
+    upper_value = float(upper_text)
+    lower_value = float(lower_text)
+    max_deviation = max(
+        MAX_DEVIATION_ABSOLUTE_FLOOR,
+        MAX_DEVIATION_NOMINAL_FACTOR * float(nominal_match.group("value")),
+    )
+    if abs(upper_value) > max_deviation or abs(lower_value) > max_deviation:
+        return None
     return (
-        float(upper_text),
-        float(lower_text),
+        upper_value,
+        lower_value,
         {index for index, _ in upper + lower},
     )
 
