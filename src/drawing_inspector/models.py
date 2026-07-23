@@ -50,3 +50,17 @@ class TitleBlock:
 class TechRequirements:
     items: list[str]
     tolerance_standard: str | None
+
+
+@dataclass
+class HoleFeature:
+    label: str
+    hole_type: str  # "through" | "blind" | "threaded" | "counterbore"
+    primary_diameter: float | str
+    depth: float | str
+    counterbore_diameter: float | None
+    counterbore_depth: float | None
+    thread_spec: str | None
+    pilot_hole: float | None
+    quantity: int
+    back_side: bool

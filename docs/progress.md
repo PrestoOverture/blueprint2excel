@@ -17,7 +17,7 @@
   - **发现的风险（需在Sprint 3处理）**：`reassemble_dimensions`未做区域过滤时，会把孔位表内不相关的相邻单元格误聚类成虚假公差标注——实测复现：表格区"12"(B行沉孔深度)+"9"(A行数量，上方)+"0"(B行螺纹深度，下方)被误组装成`Dimension(nominal=12, upper=9, lower=0)`。这正是`architecture.md` ADR-003预判的失效模式，Sprint 3 Step 3.1区域分类必须先于Step 3.5尺寸提取执行，且孔位表区域要从尺寸提取的输入中排除
 - [~] Sprint 3: 结构化解析 —— 进行中
   - [x] Step 3.1/3.3/3.4（区域分类+标题栏+技术要求）—— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿，标题栏/技术要求提取值与真实图纸逐字匹配。采用锚点文本定位（非固定比例、非`find_tables()` bbox，后者在此图纸上不可用，详见`architecture.md` ADR-003更新）。已知限制：`drawing_bbox`是矩形会与`table_bbox`几何重叠，Step 3.5尺寸提取必须显式排除`table_bbox`内文字
-  - [ ] Step 3.2 孔位表解析
+  - [x] Step 3.2 孔位表解析 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿，11行A-L（跳过I）与真实图纸逐字段核对全部匹配。已知信息丢失：B行螺纹线自身的深度"0"因`HoleFeature`无对应字段被丢弃，接受此限制不新增字段。`HoleFeature` dataclass已从`architecture.md`落地到`models.py`
   - [ ] Step 3.5 图面尺寸提取
 - [ ] Sprint 4: 公差计算 + 输出
 - [ ] Sprint 5+: Web UI（Electron壳 + FastAPI后端）—— 未启动，见`roadmap.md`
