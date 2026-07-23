@@ -12,7 +12,7 @@
 
 ## 待开始
 
-- [ ] Sprint 1: 骨架 + 检测 + 基础提取
+- [x] Sprint 1: 骨架 + 检测 + 基础提取 —— Codex实现，Claude review通过（2026-07-23）：`uv sync`/`pytest`/`mypy --strict`/`ruff`全绿；Real Test通过（`blueprints/`全部8张图纸`is_vector_pdf`均返回True，均为SolidWorks导出）；旋转文字提取验证正确（如"448"的90°旋转片段被正确标记，重组留给Sprint 2）
 - [ ] Sprint 2: 重组层
 - [ ] Sprint 3: 结构化解析
 - [ ] Sprint 4: 公差计算 + 输出
