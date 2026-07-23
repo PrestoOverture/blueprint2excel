@@ -150,7 +150,7 @@ class DrawingData:
 
 **原因**: pdfplumber的`extract_words()`API更直观，直接给出聚类后的词和坐标。但pdfplumber不支持读取文字对象的旋转变换矩阵（rotation matrix），也不支持PDF写入。PyMuPDF的`page.get_text("dict")`能拿到完整的变换矩阵，且支持在PDF上叠加标注（气泡图需要）。
 
-**代价**: 两个库对同一个PDF的坐标系可能有细微差异（pdfplumber的y轴原点在页面顶部，PyMuPDF在底部），需要做坐标转换。
+**代价（原假设，已被Sprint 4c证伪）**: 原以为两个库坐标系不同（pdfplumber的y轴原点在页面顶部，PyMuPDF在底部），需要做坐标转换。**实测更正（2026-07-23）**：直接对比同一个"920"文字对象的bbox——pdfplumber给出`top=204.57, bottom=216.97`，PyMuPDF `get_text("dict")`给出`(top=204.33, bottom=216.97)`，几乎完全一致，且`page.rect`本身就是`(0,0,width,height)`左上角原点。PyMuPDF的page级高层API（`get_text()`、`insert_text()`、`draw_circle()`等）内部已经统一到与pdfplumber相同的左上角原点、y向下坐标系，**不需要额外做y轴翻转**。`extractor.py`（Sprint 1）和`bubble_diagram.py`（Sprint 4）均已验证可以直接混用两个库的坐标而不转换。
 
 ### ADR-002: 空间聚类策略
 
