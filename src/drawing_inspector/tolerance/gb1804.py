@@ -1,10 +1,10 @@
 """GB/T 1804 general-tolerance lookup.
 
-⚠️ UNVERIFIED PLACEHOLDER TABLE — only (6-30mm, grade m)=0.1 and
-(400-1000mm, grade m)=0.4 are confirmed against docs/roadmap.md. All other
-cells are unverified estimates and MUST be checked against the authoritative
-GB/T 1804 standard text before this table is used for real inspection
-decisions.
+Cross-verified against multiple independent published sources (ISO 2768-1
+tables + a GB/T-1804-specific source with matching f-grade values) as of
+2026-07-23. NOT verified against the primary official GB/T 1804-2000 standard
+document text itself — treat as high-confidence but not
+authoritative-source-confirmed.
 """
 
 from drawing_inspector.constants import GB1804_TOLERANCES
@@ -34,6 +34,12 @@ def lookup_gb1804(nominal: float, grade: str) -> tuple[float, float]:
     for (lower_bound, upper_bound), tolerances in GB1804_TOLERANCES.items():
         if lower_bound <= nominal <= upper_bound:
             tolerance = tolerances[normalized_grade]
+            if tolerance is None:
+                msg = (
+                    f"GB/T 1804 grade {normalized_grade!r} has no tolerance "
+                    f"for nominal dimension {nominal!r} mm"
+                )
+                raise ValueError(msg)
             return tolerance, -tolerance
 
     msg = f"no GB/T 1804 tolerance range contains {nominal!r} mm"

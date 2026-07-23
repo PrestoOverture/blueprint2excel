@@ -4,15 +4,15 @@ from drawing_inspector.tolerance.gb1804 import lookup_gb1804
 
 
 def test_lookup_confirmed_400_to_1000_grade_m_value() -> None:
-    assert lookup_gb1804(920, "m") == (0.4, -0.4)
+    assert lookup_gb1804(920, "m") == (0.8, -0.8)
 
 
 def test_lookup_confirmed_6_to_30_grade_m_value() -> None:
-    assert lookup_gb1804(20, "m") == (0.1, -0.1)
+    assert lookup_gb1804(20, "m") == (0.2, -0.2)
 
 
 def test_lookup_accepts_case_insensitive_grade() -> None:
-    assert lookup_gb1804(20, "M") == (0.1, -0.1)
+    assert lookup_gb1804(20, "M") == (0.2, -0.2)
 
 
 @pytest.mark.parametrize("nominal", [0.49, 5000])
