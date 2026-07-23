@@ -27,7 +27,7 @@
   - [x] Step 4.2 Excel检查基准书导出 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。4个sheet核对：图纸基本信息、检查基准书（18行，气泡号1-18无重复）、孔位汇总（11行）、公差明细（18行）。"公差来源"列正确区分"图纸标注"vs"GB-1804-M查表（未核实）"，把Step4.1的公差表风险直接暴露在交付物里而非掩盖。`bubble_id`原地写入`Dimension`对象，供Step 4.3气泡图复用同一编号
   - [x] Step 4.3 气泡图PDF —— Codex实现（后台任务中途卡住42分钟无进展被kill重跑，重跑后文件已生成但mypy有3处untyped-call错误未及处理，Claude按已有惯例`# type: ignore[no-untyped-call]`直接小修——不涉及逻辑改动），Claude review通过（2026-07-23）：`pytest`/`mypy --strict`/`ruff`全绿。**Real Test（视觉核对，非仅程序断言）**：用Read工具直接渲染生成的气泡图PDF肉眼核对——全部18个气泡准确落在对应真实标注上（920/448×2/440/880/60±0.05×2/160±0.05×2/190×2/205/410/20×2/50×2/12），未见坐标翻转/镜像问题，确认ADR-001更正无误。左侧旋转标注密集区域（20/205/410/448附近）气泡有轻微重叠——预期内的已知限制，碰撞检测/引线偏移未实现（按范围纪律排除在外）
 - [ ] Sprint 5: Web UI —— 已启动（2026-07-23，用户批准）
-  - [ ] Step 5.1 FastAPI后端
+  - [x] Step 5.1 FastAPI后端 —— Codex实现，Claude review通过（2026-07-23）：`pytest`/`mypy backend --strict`/`mypy src --strict`/`ruff`全绿。**独立验证（真实起了uvicorn进程，用curl逐个端点核对，不只是信测试套件）**：`/health`正常；`POST /inspect`上传板面图返回200，`drawing_number`/18个尺寸/11个孔位全部正确；Excel和气泡图PDF下载端点都能拿到有效文件（PK/%PDF开头字节核对过）；非矢量PDF正确返回422（不是500）且错误信息清晰；未知job_id正确返回404。启动命令：`uv run uvicorn backend.main:app`
   - [ ] Step 5.2 React前端骨架
   - [ ] Step 5.3 Electron桌面壳
 

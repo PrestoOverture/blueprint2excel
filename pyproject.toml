@@ -4,13 +4,17 @@ version = "0.1.0"
 description = "Vector PDF inspection primitives for engineering drawings"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi",
     "openpyxl",
     "pdfplumber",
     "pymupdf",
+    "python-multipart",
+    "uvicorn[standard]",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx",
     "mypy",
     "pytest",
     "ruff",
@@ -24,6 +28,7 @@ build-backend = "uv_build"
 testpaths = ["tests"]
 
 [tool.mypy]
+mypy_path = "src"
 strict = true
 
 [tool.ruff]
@@ -31,4 +36,3 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
-
