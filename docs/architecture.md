@@ -41,6 +41,7 @@ drawing_inspector/          # 当前阶段的全部工作范围
 ├── extractor.py            # 文字对象提取（pdfplumber + PyMuPDF）
 ├── reassembler.py          # 空间聚类 + 公差重组（核心难点）
 ├── parser/
+│   ├── regions.py          # 区域分类（锚点文本定位，非find_tables()的bbox——见ADR-006）
 │   ├── hole_table.py       # 孔位表解析
 │   ├── title_block.py      # 标题栏解析
 │   ├── tech_requirements.py# 技术要求提取
@@ -84,6 +85,29 @@ class Dimension:
     x: float                       # 标注在图面的位置
     y: float
     bubble_id: int | None          # 气泡编号（输出时赋值）
+
+@dataclass
+class PageRegions:
+    """区域分类结果，各区域为PDF坐标系bbox (x0, top, x1, bottom)"""
+    table_bbox: tuple[float, float, float, float] | None
+    title_block_bbox: tuple[float, float, float, float] | None
+    tech_requirements_bbox: tuple[float, float, float, float] | None
+    drawing_bbox: tuple[float, float, float, float]  # 矩形，可能与table_bbox重叠——见ADR-006
+
+@dataclass
+class TitleBlock:
+    """标题栏结构化字段"""
+    drawing_number: str
+    part_name: str
+    material: str
+    scale: str
+    date: str
+
+@dataclass
+class TechRequirements:
+    """技术要求条目 + 未注公差标准"""
+    items: list[str]
+    tolerance_standard: str | None
 
 @dataclass
 class HoleFeature:
@@ -138,6 +162,8 @@ class DrawingData:
 **原因**: 工程图纸的布局高度标准化——标题栏在右下角、技术要求在左下角、孔位表在右侧。用PDF页面尺寸的百分比做粗分区，再在分区内做细解析，足够可靠。SolidWorks导出的图纸布局尤其规整。
 
 **风险**: 非标布局（如表格在左侧）会分区错误。缓解方案：先找表格线（pdfplumber的`find_tables()`），用表格实际位置覆盖默认分区。
+
+**实施更新（Sprint 3a，2026-07-23）**: 固定比例分区在真实图纸上不可靠（`find_tables()`在此图纸上返回的表格bbox基本是整个页面——外框线被误判为表格网格线，`(8.5, 6.58, 835.67, 589.08)` vs 页面`841.89×595.276`）。最终采用**锚点文本定位**替代固定比例/`find_tables()` bbox：定位"图号"/"材料"/"名称"（标题栏）、"技术要求"+编号条目（技术要求区）、"标签"/"大小"/"数量"表头（孔位表）的真实文字位置，再从锚点推导各区域bbox。`drawing_bbox`是矩形，因此在孔位表所在的右侧区域会与`table_bbox`发生几何重叠（孔位表不是从页面顶部延伸的矩形区域）——下游消费者（尺寸提取等）必须显式排除`table_bbox`内的文字对象，不能只依赖`drawing_bbox`本身。见`models.py`的`PageRegions`。
 
 ### ADR-004: 气泡图渲染方案
 

@@ -27,3 +27,26 @@ class Dimension:
     x: float
     y: float
     bubble_id: int | None
+
+
+@dataclass
+class PageRegions:
+    table_bbox: tuple[float, float, float, float] | None
+    title_block_bbox: tuple[float, float, float, float] | None
+    tech_requirements_bbox: tuple[float, float, float, float] | None
+    drawing_bbox: tuple[float, float, float, float]
+
+
+@dataclass
+class TitleBlock:
+    drawing_number: str
+    part_name: str
+    material: str
+    scale: str
+    date: str
+
+
+@dataclass
+class TechRequirements:
+    items: list[str]
+    tolerance_standard: str | None
